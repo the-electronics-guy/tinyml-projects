@@ -3,3 +3,5 @@ pip3 install edge_impulse_linux -i https://pypi.python.org/simple
 
 
 ei_c0313ea646a5461cc9223a9352035c1feebeb1469b07f18a64e0e8803efb7cd9
+
+https://docs.edgeimpulse.com/docs/tools/edge-impulse-python-sdk

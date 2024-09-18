@@ -1,0 +1,135 @@
+import cv2
+import numpy as np
+from PIL import Image
+import time
+from tflite_runtime.interpreter import Interpreter
+
+cap = cv2.VideoCapture(0)
+threshold = 0.2
+top_k = 10  # number of objects to be shown as detected
+
+model_dir = '/var/www/html/all_models'
+model = 'mobilenet_ssd_v2_coco_quant_postprocess.tflite'
+lbl = 'coco_labels.txt'
+
+counter = 0
+prev_val = 0
+
+selected_obj = "person"
+
+# Load the labels from file
+def load_labels(path):
+    with open(path, 'r') as f:
+        return {i: line.strip() for i, line in enumerate(f.readlines())}
+
+# Load the TensorFlow Lite model
+def load_model(model_path):
+    interpreter = Interpreter(model_path=model_path)
+    interpreter.allocate_tensors()
+    return interpreter
+
+# Run inference on the frame
+def set_input(interpreter, image):
+    input_details = interpreter.get_input_details()
+    floating_model = input_details[0]['dtype'] == np.float32
+    input_shape = input_details[0]['shape']
+
+    image_resized = image.resize((input_shape[1], input_shape[2]))
+    input_data = np.expand_dims(image_resized, axis=0)
+
+    if floating_model:
+        input_data = np.float32(input_data) / 255.0
+
+    interpreter.set_tensor(input_details[0]['index'], input_data)
+
+# Get output from the model
+def get_output(interpreter, score_threshold, top_k):
+    output_details = interpreter.get_output_details()
+    boxes = interpreter.get_tensor(output_details[0]['index'])[0]  # Bounding box coordinates
+    classes = interpreter.get_tensor(output_details[1]['index'])[0]  # Class index
+    scores = interpreter.get_tensor(output_details[2]['index'])[0]  # Confidence scores
+
+    results = []
+    for i in range(len(scores)):
+        if scores[i] >= score_threshold:
+            result = {
+                'id': int(classes[i]),
+                'score': scores[i],
+                'bbox': boxes[i]
+            }
+            results.append(result)
+    return results[:top_k]
+
+def show_selected_object_counter(objs, labels):
+    global counter, prev_val, selected_obj
+    arr = []
+    for obj in objs:
+        label = labels.get(obj['id'], obj['id'])
+        arr.append(label)
+    
+    print("arr:", arr)
+    
+    x = arr.count(selected_obj)
+    diff = x - prev_val
+    
+    print("diff:", diff)
+    if diff > 0:
+        counter = counter + diff
+    
+    prev_val = x
+    print("counter:", counter)
+
+def main():
+    labels = load_labels(f"{model_dir}/{lbl}")
+    interpreter = load_model(f"{model_dir}/{model}")
+    
+    fps = 1
+    arr_dur = [0, 0, 0]
+
+    while True:
+        start_time = time.time()
+        
+        # Capture frame
+        ret, frame = cap.read()
+        if not ret:
+            break
+        
+        cv2_im = cv2.flip(frame, 1)
+        cv2_im_rgb = cv2.cvtColor(cv2_im, cv2.COLOR_BGR2RGB)
+        pil_im = Image.fromarray(cv2_im_rgb)
+
+        # Run inference
+        set_input(interpreter, pil_im)
+        interpreter.invoke()
+        objs = get_output(interpreter, score_threshold=threshold, top_k=top_k)
+
+        # Update the object counter
+        show_selected_object_counter(objs, labels)
+
+        # Draw bounding boxes and labels
+        for obj in objs:
+            bbox = obj['bbox']
+            ymin, xmin, ymax, xmax = bbox
+            xmin, xmax, ymin, ymax = int(xmin * frame.shape[1]), int(xmax * frame.shape[1]), int(ymin * frame.shape[0]), int(ymax * frame.shape[0])
+            
+            # Draw bounding box
+            cv2.rectangle(cv2_im, (xmin, ymin), (xmax, ymax), (0, 255, 0), 2)
+            
+            # Draw label
+            label = labels.get(obj['id'], obj['id'])
+            cv2.putText(cv2_im, label, (xmin, ymin - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+        
+        # Show the frame
+        cv2.imshow('Object Detection - TensorFlow Lite', cv2_im)
+        
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+        fps = round(1.0 / (time.time() - start_time), 1)
+        print(f"*********FPS: {fps} ************")
+
+    cap.release()
+    cv2.destroyAllWindows()
+
+if __name__ == '__main__':
+    main()

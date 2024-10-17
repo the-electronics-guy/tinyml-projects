@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rover Control</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            text-align: center;
+        }
+        .video-container {
+            margin: 20px auto;
+            width: 640px;
+            height: 480px;
+            border: 2px solid #000;
+        }
+        #video-stream {
+            width: 100%;
+            height: 100%;
+        }
+        .controls {
+            margin-top: 20px;
+        }
+        .d-pad, .buttons {
+            display: inline-block;
+            margin: 10px;
+        }
+        .d-pad button {
+            width: 60px;
+            height: 60px;
+            margin: 5px;
+        }
+        .buttons button {
+            width: 100px;
+            height: 50px;
+        }
+        input {
+            width: 200px;
+            padding: 10px;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Rover Control Station</h1>
+    
+    <div class="video-container">
+        <img id="video-stream" src="{{ url_for('video_feed') }}" alt="Video Feed">
+    </div>
+
+    <div>
+        <input type="text" id="ip-address" placeholder="Enter Camera IP">
+        <button id="connect-btn">Connect</button>
+    </div>
+
+    <div class="controls">
+        <div class="d-pad">
+            <button onclick="sendCommand('forward')">↑</button><br>
+            <button onclick="sendCommand('left')">←</button>
+            <button onclick="sendCommand('stop')">⏹</button>
+            <button onclick="sendCommand('right')">→</button><br>
+            <button onclick="sendCommand('backward')">↓</button>
+        </div>
+
+        <div class="buttons">
+            <button onclick="sendCommand('headlights')">Headlights</button><br>
+            <button onclick="sendCommand('buzzer')">Buzzer</button>
+        </div>
+    </div>
+
+    <script>
+        function sendCommand(command) {
+            fetch('/control', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ command: command })
+            })
+            .then(response => response.json())
+            .then(data => console.log('Command sent:', data))
+            .catch(error => console.error('Error:', error));
+        }
+
+        document.getElementById('connect-btn').addEventListener('click', () => {
+            const ipAddress = document.getElementById('ip-address').value;
+            if (ipAddress) {
+                document.getElementById('video-stream').src = `http://${ipAddress}:5000/video_feed`;
+            }
+        });
+    </script>
+</body>
+</html>

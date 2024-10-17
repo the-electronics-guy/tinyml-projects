@@ -1,0 +1,92 @@
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+
+.container {
+    width: 80%;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #e9e9e9;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    color: #333;
+    font-size: 2.5em;
+}
+
+.video-container {
+    margin-bottom: 20px;
+    border: 2px solid #333;
+    padding: 10px;
+    background-color: #000;
+}
+
+#videoFeed {
+    width: 100%;
+    height: auto;
+    max-height: 400px;
+}
+
+.ip-input {
+    margin-bottom: 20px;
+}
+
+.ip-input input {
+    padding: 10px;
+    width: 200px;
+    font-size: 1em;
+}
+
+.ip-input button {
+    padding: 10px 20px;
+    font-size: 1em;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.control-panel {
+    margin-top: 20px;
+}
+
+.d-pad {
+    display: inline-block;
+}
+
+.d-pad button {
+    background-color: #444;
+    color: white;
+    border: 2px solid #333;
+    padding: 20px;
+    margin: 5px;
+    font-size: 1.5em;
+    cursor: pointer;
+    width: 70px;
+    height: 70px;
+}
+
+.extras {
+    margin-top: 20px;
+}
+
+.extras button {
+    padding: 15px 30px;
+    font-size: 1em;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    margin: 5px;
+}
+
+/* Rover design */
+.container {
+    background-image: url('/static/rover-background.png'); /* Add rover-inspired background */
+    background-size: cover;
+}

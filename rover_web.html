@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rover Control Station</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Rover Control Station</h1>
+
+        <!-- Video Feed -->
+        <div class="video-container">
+            <img id="videoFeed" src="{{ url_for('video_feed') }}" alt="Rover Camera">
+        </div>
+
+        <!-- IP Address Input -->
+        <div class="ip-input">
+            <input type="text" id="ipAddress" placeholder="Enter IP Address">
+            <button onclick="connectToRover()">Connect</button>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <!-- D-pad for rover movement -->
+            <div class="d-pad">
+                <button id="up" onclick="sendCommand('forward')">&#9650;</button><br>
+                <button id="left" onclick="sendCommand('left')">&#9664;</button>
+                <button id="stop" onclick="sendCommand('stop')">Stop</button>
+                <button id="right" onclick="sendCommand('right')">&#9654;</button><br>
+                <button id="down" onclick="sendCommand('backward')">&#9660;</button>
+            </div>
+
+            <!-- Headlights and Buzzer Controls -->
+            <div class="extras">
+                <button id="headlights" onclick="sendCommand('headlights')">Toggle Headlights</button>
+                <button id="buzzer" onclick="sendCommand('buzzer')">Toggle Buzzer</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

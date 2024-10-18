@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rover Control Station</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            text-align: center;
+        }
+        .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px auto;
+            width: 90%;
+        }
+        .video-container {
+            margin: 20px auto;
+            width: 640px;
+            height: 480px;
+            border: 2px solid #000;
+        }
+        #video-stream {
+            width: 100%;
+            height: 100%;
+        }
+        .controls {
+            margin-top: 20px;
+        }
+        .d-pad {
+            display: inline-block;
+            text-align: center;
+        }
+        .d-pad button {
+            width: 60px;
+            height: 60px;
+            margin: 5px;
+            background-color: aquamarine;
+        }
+        .buttons-container {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        .control-buttons {
+            display: inline-block;
+            text-align: center;
+            background-color: aquamarine;
+        }
+        .control-buttons img {
+            width: 50px;
+            margin: 10px;
+            cursor: pointer;
+        }
+        input {
+            width: 200px;
+            padding: 10px;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Rover Control Station</h1>
+    
+    <!-- IP Address input and connect button -->
+    <div>
+        <input type="text" id="ip-address" placeholder="Enter Camera IP">
+        <button id="connect-btn">Connect</button>
+    </div>
+
+    <!-- Main control panel with video and D-pads -->
+    <div class="container">
+        <!-- Left D-pad control -->
+        <div class="d-pad">
+            <button onclick="sendCommand('forward')">↑</button><br>
+            <button onclick="sendCommand('left')">←</button>
+            <button onclick="sendCommand('stop')">⏹</button>
+            <button onclick="sendCommand('right')">→</button><br>
+            <button onclick="sendCommand('backward')">↓</button>
+        </div>
+
+        <!-- Video stream -->
+        <div class="video-container">
+            <img id="video-stream" src="{{ url_for('video_feed') }}" alt="Video Feed">
+        </div>
+
+        <!-- Right D-pad control -->
+        <div class="d-pad">
+            <button onclick="sendCommand('forward')">↑</button><br>
+            <button onclick="sendCommand('left')">←</button>
+            <button onclick="sendCommand('stop')">⏹</button>
+            <button onclick="sendCommand('right')">→</button><br>
+            <button onclick="sendCommand('backward')">↓</button>
+        </div>
+    </div>
+
+    <!-- Icon-based controls for headlights and buzzer -->
+    <div class="buttons-container">
+        <div class="control-buttons">
+            <!-- Headlights using custom icons -->
+            <img src="headlight_on.png" alt="Headlights ON" id="headlights-on" onclick="sendCommand('headlights_on')" title="Headlights ON">
+            <img src="headlight_off.png" alt="Headlights OFF" id="headlights-off" onclick="sendCommand('headlights_off')" title="Headlights OFF">
+        </div>
+        <div class="control-buttons">
+            <!-- Buzzer using icons from Font Awesome -->
+            <img src="buzzer_on.png" alt="Buzzer ON" id="buzzer-on" onclick="sendCommand('buzzer_on')" title="Buzzer ON">
+            <img src="buzzer_off.png" alt="Buzzer OFF" id="buzzer-off" onclick="sendCommand('buzzer_off')" title="Buzzer OFF">
+
+        </div>
+    </div>
+
+    <!-- JavaScript to handle button clicks and sending commands -->
+    <script>
+        function sendCommand(command) {
+            fetch('/control', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ command: command })
+            })
+            .then(response => response.json())
+            .then(data => console.log('Command sent:', data))
+            .catch(error => console.error('Error:', error));
+        }
+
+        document.getElementById('connect-btn').addEventListener('click', () => {
+            const ipAddress = document.getElementById('ip-address').value;
+            if (ipAddress) {
+                document.getElementById('video-stream').src = `http://${ipAddress}:5000/video_feed`;
+            }
+        });
+    </script>
+</body>
+</html>

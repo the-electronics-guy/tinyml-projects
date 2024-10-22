@@ -251,15 +251,15 @@
         }
 
         function sendCommand(command) {
-            fetch('/control', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(command)
-            })
-            .then(response => response.json())
-            .then(data => console.log('Command sent:', data))
-            .catch(error => console.error('Error:', error));
-        }
+    fetch('/control', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(command)
+    })
+    .then(response => response.json())
+    .then(data => console.log('Command sent:', data))
+    .catch(error => console.error('Error:', error));
+}
 
         document.getElementById('connect-btn').addEventListener('click', () => {
             const ipAddress = document.getElementById('ip-address').value;

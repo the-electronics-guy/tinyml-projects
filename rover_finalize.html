@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rover Control Station</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
+    <style>
+        :root {
+            --primary: #2D3142;
+            --secondary: #4F5D75;
+            --accent: #58A4B0;
+            --background: #1B1B1E;
+            --text: #FFFFFF;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 1vh;
+        }
+
+        .header {
+            background-color: var(--primary);
+            padding: 1vh;
+            border-radius: 10px;
+            margin-bottom: 1vh;
+        }
+
+        h1 {
+            font-size: 1.8em;
+            color: var(--accent);
+        }
+
+        .connection-panel {
+            background-color: var(--secondary);
+            padding: 1vh;
+            border-radius: 10px;
+            margin-bottom: 1vh;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        input {
+            padding: 1vh;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--primary);
+            color: var(--text);
+            font-size: 0.9em;
+            width: 250px;
+        }
+
+        button {
+            padding: 1vh 2vh;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--accent);
+            color: var(--text);
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 1vh;
+            flex: 1;
+            min-height: 0;
+            margin-bottom: 1vh;
+        }
+
+        .video-container {
+            background-color: var(--primary);
+            border-radius: 10px;
+            overflow: hidden;
+            aspect-ratio: 4/3;
+            height: auto;
+        }
+
+        #video-stream {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .joystick-zone {
+            background-color: var(--secondary);
+            border-radius: 10px;
+            aspect-ratio: 1;
+            position: relative;
+            align-self: center;
+            width: 100%;
+            max-height: 25vh;
+        }
+
+        .controls-panel {
+            background-color: var(--secondary);
+            padding: 1vh;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-around;
+            height: 8vh;
+        }
+
+        .control-button {
+            background-color: var(--primary);
+            padding: 1vh;
+            border-radius: 50%;
+            width: 6vh;
+            height: 6vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-button:hover {
+            background-color: var(--accent);
+            transform: scale(1.1);
+        }
+
+        .control-button img {
+            width: 3vh;
+            height: 3vh;
+        }
+
+        .active {
+            background-color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Rover Control Station</h1>
+    </div>
+
+    <div class="connection-panel">
+        <input type="text" id="ip-address" placeholder="Enter Camera IP">
+        <button id="connect-btn">Connect</button>
+    </div>
+
+    <div class="main-container">
+        <div class="joystick-zone" id="left-joystick"></div>
+        <div class="video-container">
+            <img id="video-stream" src="/api/placeholder/640/480" alt="Video Feed">
+        </div>
+        <div class="joystick-zone" id="right-joystick"></div>
+    </div>
+
+    <div class="controls-panel">
+        <div class="control-button" id="headlights-btn" onclick="toggleControl('headlights')">
+            <img src="/api/placeholder/30/30" alt="Headlights">
+        </div>
+        <div class="control-button" id="buzzer-btn" onclick="toggleControl('buzzer')">
+            <img src="/api/placeholder/30/30" alt="Buzzer">
+        </div>
+    </div>
+
+    <script>
+        // Initialize joysticks after the DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            const joystickSize = Math.min(
+                document.querySelector('.joystick-zone').offsetWidth,
+                document.querySelector('.joystick-zone').offsetHeight
+            );
+
+            const joystickOptions = {
+                mode: 'static',
+                position: { left: '50%', top: '50%' },
+                color: '#58A4B0',
+                size: joystickSize * 0.8
+            };
+
+            // Create joysticks
+            const leftJoystick = nipplejs.create({
+                ...joystickOptions,
+                zone: document.getElementById('left-joystick')
+            });
+
+            const rightJoystick = nipplejs.create({
+                ...joystickOptions,
+                zone: document.getElementById('right-joystick')
+            });
+
+            // Joystick event handlers
+            leftJoystick.on('move', (evt, data) => {
+                const angle = data.angle.degree;
+                const force = Math.min(data.force, 1.0);
+                
+                sendCommand({
+                    type: 'movement',
+                    angle: angle,
+                    force: force
+                });
+            });
+
+            rightJoystick.on('move', (evt, data) => {
+                const angle = data.angle.degree;
+                const force = Math.min(data.force, 1.0);
+                
+                sendCommand({
+                    type: 'camera',
+                    angle: angle,
+                    force: force
+                });
+            });
+
+            // Stop on joystick release
+            leftJoystick.on('end', () => {
+                sendCommand({ type: 'movement', command: 'stop' });
+            });
+
+            rightJoystick.on('end', () => {
+                sendCommand({ type: 'camera', command: 'stop' });
+            });
+        });
+
+        // Control toggle handlers
+        const controls = {
+            headlights: false,
+            buzzer: false
+        };
+
+        function toggleControl(control) {
+            controls[control] = !controls[control];
+            const button = document.getElementById(`${control}-btn`);
+            button.classList.toggle('active');
+            
+            sendCommand({
+                type: control,
+                state: controls[control]
+            });
+        }
+
+        function sendCommand(command) {
+            fetch('/control', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(command)
+            })
+            .then(response => response.json())
+            .then(data => console.log('Command sent:', data))
+            .catch(error => console.error('Error:', error));
+        }
+
+        document.getElementById('connect-btn').addEventListener('click', () => {
+            const ipAddress = document.getElementById('ip-address').value;
+            if (ipAddress) {
+                document.getElementById('video-stream').src = `http://${ipAddress}:5000/video_feed`;
+            }
+        });
+    </script>
+</body>
+</html>
